@@ -1,98 +1,73 @@
 import { useEffect, useState } from "react";
-import DashboardLayout from "../../../layout/DashboardLayout";
+// REMOVED: import DashboardLayout from "../../../layout/DashboardLayout"; // This line should be removed
 
 export default function DoctorAppointments() {
   const [appointments, setAppointments] = useState([]);
 
   useEffect(() => {
-    // Get all appointments booked by patients from localStorage
-    const all = JSON.parse(localStorage.getItem("patientHistory") || "[]");
+    // Load logged-in doctor from localStorage using 'currentUser'
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const doctorName = currentUser.name;
 
-    // Get currently logged-in doctor name from localStorage
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const allKeys = Object.keys(localStorage);
+    const patientHistoryKeys = allKeys.filter((key) =>
+      key.startsWith("patientHistory_")
+    );
 
-    // Filter only those appointments that belong to this doctor
-    const myAppointments = all.filter((appt) => appt.doctor === user.name);
-    setAppointments(myAppointments);
+    let allAppointments = [];
+
+    patientHistoryKeys.forEach((key) => {
+      const records = JSON.parse(localStorage.getItem(key) || "[]");
+      const doctorAppointments = records.filter(
+        (app) => app.doctor === doctorName
+      );
+      allAppointments.push(...doctorAppointments);
+    });
+
+    setAppointments(allAppointments);
   }, []);
 
   return (
-    <DashboardLayout role="doctor">
-      <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow">
-        <h2 className="text-3xl font-bold text-indigo-700 mb-6">
-          📅 My Appointments
-        </h2>
+    // REMOVED: max-w-5xl mx-auto from the className below.
+    // The DashboardLayout will now control the max-width and centering.
+    <div className="bg-white p-6 rounded-xl shadow">
+      <h2 className="text-2xl font-bold text-indigo-700 mb-4">
+        📅 My Patient Appointments
+      </h2>
 
-        {appointments.length === 0 ? (
-          <p className="text-gray-600">No appointments yet.</p>
-        ) : (
-          <ul className="space-y-4">
-            {appointments.map((appt, idx) => (
-              <li
-                key={idx}
-                className="border-l-4 border-blue-600 bg-blue-50 p-4 rounded"
-              >
-                <p className="font-semibold text-lg">🧑 Patient Appointment</p>
-                <p className="text-gray-700">
-                  {appt.specialization} @ {appt.hospital}
-                </p>
-                <p className="text-gray-600">🕒 {appt.slot}</p>
-                <p className="text-green-700 font-medium">💰 ₹{appt.fee}</p>
-              </li>
+      {appointments.length === 0 ? (
+        <p className="text-gray-600">No appointments found yet.</p>
+      ) : (
+        <table className="w-full table-auto border mt-4">
+          <thead className="bg-blue-100">
+            <tr>
+              <th className="p-2 text-left">Patient</th>
+              <th className="p-2 text-left">Specialization</th>
+              <th className="p-2 text-left">Hospital</th>
+              <th className="p-2 text-left">Slot</th>
+              <th className="p-2 text-left">Fee</th>
+              <th className="p-2 text-left">Booked At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {appointments.map((app, idx) => (
+              <tr key={idx} className="border-t">
+                <td className="p-2">{app.patient || "Anonymous"}</td>
+                <td className="p-2">{app.specialization}</td>
+                <td className="p-2">{app.hospital}</td>
+                <td className="p-2">
+                  {app.slot} {/* Assuming app.slot contains date and time */}
+                </td>
+                <td className="p-2">₹{app.fee}</td>
+                <td className="p-2">
+                  {new Date(app.bookedAt).toLocaleString()}
+                </td>
+              </tr>
             ))}
-          </ul>
-        )}
-      </div>
-    </DashboardLayout>
+          </tbody>
+        </table>
+      )}
+    </div>
   );
 }
 
-
-
-
-
-
-
-
-// // src/pages/Dashboard/doctor/DoctorAppointments.jsx
-// import DashboardLayout from "../../../layout/DashboardLayout";
-// import { useEffect, useState } from "react";
-
-// export default function DoctorAppointments() {
-//   const [appointments, setAppointments] = useState([]);
-
-//   useEffect(() => {
-//     const all = JSON.parse(localStorage.getItem("patientHistory") || "[]");
-
-//     // mock current doctor name (in real case, get from context/localStorage)
-//     const doctorName = "Dr. Arjun Rao";
-
-//     const doctorAppointments = all.filter(a => a.doctor === doctorName);
-//     setAppointments(doctorAppointments);
-//   }, []);
-
-//   return (
-//     <DashboardLayout role="doctor">
-//       <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow">
-//         <h2 className="text-3xl font-bold text-indigo-700 mb-6">
-//           📅 My Appointments
-//         </h2>
-
-//         {appointments.length === 0 ? (
-//           <p className="text-gray-600">No appointments yet.</p>
-//         ) : (
-//           <ul className="space-y-4">
-//             {appointments.map((appt, idx) => (
-//               <li key={idx} className="border-l-4 border-green-600 bg-green-50 p-4 rounded">
-//                 <p><strong>Patient:</strong> [Mock Patient]</p>
-//                 <p><strong>Hospital:</strong> {appt.hospital}</p>
-//                 <p><strong>Slot:</strong> {appt.slot}</p>
-//                 <p className="text-green-700 font-semibold">Fee: ₹{appt.fee}</p>
-//               </li>
-//             ))}
-//           </ul>
-//         )}
-//       </div>
-//     </DashboardLayout>
-//   );
-// }
